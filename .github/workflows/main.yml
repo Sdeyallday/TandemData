@@ -15,7 +15,7 @@ jobs:
 
       - name: Send JSON Data to First URL 
         run: | 
-          curl -X POST "https://tandem.autodesk.com/api/v1/timeseries/models/urn:adsk.dtm:ST5-WSDoQcm5VZSn84_kGQ/streams/AQAAAKyrPhWZC0GUrXd18gpY0CoAAAAA" \
+          curl -X POST "https://:059UiG4ZQYeDvz9PoW600w@tandem.autodesk.com/api/v1/timeseries/models/urn:adsk.dtm:ST5-WSDoQcm5VZSn84_kGQ/streams/AQAAAKyrPhWZC0GUrXd18gpY0CoAAAAA" \
                -H "Content-Type: application/json" \
                -d @stream.json
 
