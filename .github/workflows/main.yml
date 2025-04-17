@@ -37,8 +37,8 @@ jobs:
           echo "" >> fetch_weather.py
           echo "with open('stream.json', 'w') as f:" >> fetch_weather.py
           echo "    json.dump({" >> fetch_weather.py
-          echo "        'temperature': d['main']['temp']," >> fetch_weather.py
-          echo "        'humidity': d['main']['humidity']" >> fetch_weather.py
+          echo "        'Temperature': d['main']['temp']," >> fetch_weather.py
+          echo "        'Humidity': d['main']['humidity']" >> fetch_weather.py
           echo "    }, f, indent=2)" >> fetch_weather.py
 
       - name: Run the script
