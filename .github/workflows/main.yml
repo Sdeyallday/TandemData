@@ -2,8 +2,8 @@ name: Fetch Weather and Post to Tandem
 
 on:
   schedule:
-    - cron: '*/30 * * * *'  # Runs every 30 minutes (UTC)
-  workflow_dispatch:        # Optional: allow manual trigger
+    - cron: '*/30 * * * *'  # Every 30 minutes UTC
+  workflow_dispatch:
 
 jobs:
   update_and_post:
@@ -21,9 +21,10 @@ jobs:
       - name: Install requests
         run: pip install requests
 
-      - name: Fetch weather and write stream.json
+      - name: Write fetch_weather.py
         run: |
-          echo "import requests
+          cat <<EOF > fetch_weather.py
+import requests
 import json
 
 API_KEY = '0b4192116572f42a2606602c1a8d46c2'
@@ -37,17 +38,27 @@ with open('stream.json', 'w') as f:
         'temperature': d['main']['temp'],
         'humidity': d['main']['humidity']
     }, f, indent=2)
-" > fetch_weather.py
-          python fetch_weather.py
+EOF
+
+      - name: Run fetch_weather.py
+        run: python fetch_weather.py
 
       - name: Commit updated stream.json
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add stream.json
-          git commit -m "Update stream.json with live weather data" || echo "No changes to commit"
+          git commit -m "Update stream.json with live weather data" || echo "No changes"
           git push
 
-      - name: Send JSON Data to First URL (Temperature)
+      - name: Send JSON Data to Tandem (Temperature)
         run: |
-          curl -X POST "https://:059UiG4ZQYeDvz9PoW600w@tandem.autodesk.com/api/v1/t
+          curl -X POST "https://:059UiG4ZQYeDvz9PoW600w@tandem.autodesk.com/api/v1/timeseries/models/urn:adsk.dtm:ST5-WSDoQcm5VZSn84_kGQ/streams/AQAAAKyrPhWZC0GUrXd18gpY0CoAAAAA" \
+               -H "Content-Type: application/json" \
+               -d @stream.json
+
+      - name: Send JSON Data to Tandem (Humidity)
+        run: |
+          curl -X POST "https://:LA1-6cosQUCKzXPl1h7E5A@tandem.autodesk.com/api/v1/timeseries/models/urn:adsk.dtm:ST5-WSDoQcm5VZSn84_kGQ/streams/AQAAAHiguQoVW0iXhe77Q_4n9vcAAAAA" \
+               -H "Content-Type: application/json" \
+               -d @stream.json
