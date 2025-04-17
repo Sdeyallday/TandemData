@@ -1,26 +1,57 @@
-name: Post JSON File to Two URLs
+name: Fetch Weather and Post to Tandem
 
-on: 
-  push:
-    branches: 
-      - main  # Runs only when pushing to the main branch
-  workflow_dispatch:  # Allows manual trigger
+on:
+  schedule:
+    - cron: '*/30 * * * *'  # Every 30 minutes (UTC)
+  workflow_dispatch:
 
-jobs: 
-  post_json: 
-    runs-on: ubuntu-latest 
-    steps: 
-      - name: Checkout Repository 
+jobs:
+  update_and_post:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Send JSON Data to First URL 
-        run: | 
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install requests
+        run: pip install requests
+
+      - name: Fetch weather and write stream.json
+        run: |
+          python -c "
+import requests, json
+API_KEY = '0b4192116572f42a2606602c1a8d46c2'
+CITY = 'Delft'
+url = f'https://api.openweathermap.org/data/2.5/weather?q={CITY}&appid={API_KEY}&units=metric'
+r = requests.get(url)
+d = r.json()
+with open('stream.json', 'w') as f:
+    json.dump({
+        'temperature': d['main']['temp'],
+        'humidity': d['main']['humidity']
+    }, f, indent=2)
+          "
+
+      - name: Commit updated stream.json
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add stream.json
+          git commit -m "Update stream.json with latest weather data" || echo "No changes"
+          git push
+
+      - name: Send JSON to Tandem (Temperature Stream)
+        run: |
           curl -X POST "https://:059UiG4ZQYeDvz9PoW600w@tandem.autodesk.com/api/v1/timeseries/models/urn:adsk.dtm:ST5-WSDoQcm5VZSn84_kGQ/streams/AQAAAKyrPhWZC0GUrXd18gpY0CoAAAAA" \
                -H "Content-Type: application/json" \
                -d @stream.json
 
-      - name: Send JSON Data to Second URL 
-        run: | 
+      - name: Send JSON to Tandem (Humidity Stream)
+        run: |
           curl -X POST "https://:LA1-6cosQUCKzXPl1h7E5A@tandem.autodesk.com/api/v1/timeseries/models/urn:adsk.dtm:ST5-WSDoQcm5VZSn84_kGQ/streams/AQAAAHiguQoVW0iXhe77Q_4n9vcAAAAA" \
                -H "Content-Type: application/json" \
                -d @stream.json
