@@ -29,8 +29,9 @@ jobs:
           echo "import json" >> fetch_weather.py
           echo "" >> fetch_weather.py
           echo "API_KEY = '0b4192116572f42a2606602c1a8d46c2'" >> fetch_weather.py
-          echo "CITY = 'Brownsville'" >> fetch_weather.py
-          echo "url = f'https://api.openweathermap.org/data/2.5/weather?q={CITY}&appid={API_KEY}&units=metric'" >> fetch_weather.py
+          echo "LAT = 40.022371938" >> fetch_weather.py
+          echo "LON = -79.88666527" >> fetch_weather.py
+          echo "url = f'https://api.openweathermap.org/data/2.5/weather?lat={LAT}&lon={LON}&appid={API_KEY}&units=metric'" >> fetch_weather.py
           echo "r = requests.get(url)" >> fetch_weather.py
           echo "d = r.json()" >> fetch_weather.py
           echo "" >> fetch_weather.py
@@ -44,12 +45,15 @@ jobs:
         run: python fetch_weather.py
 
       - name: Commit stream.json
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
+          git remote set-url origin https://x-access-token:${TOKEN}@github.com/${{ github.repository }}
           git add stream.json
           git commit -m "Update stream.json with new weather data" || echo "No changes to commit"
-          git push
+          git push origin HEAD:main
 
       - name: Send JSON Data to Tandem (Temperature)
         run: |
