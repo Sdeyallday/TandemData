@@ -29,7 +29,7 @@ jobs:
           echo "import json" >> fetch_weather.py
           echo "" >> fetch_weather.py
           echo "API_KEY = '0b4192116572f42a2606602c1a8d46c2'" >> fetch_weather.py
-          echo "CITY = 'Delft'" >> fetch_weather.py
+          echo "CITY = 'Brownsville'" >> fetch_weather.py
           echo "url = f'https://api.openweathermap.org/data/2.5/weather?q={CITY}&appid={API_KEY}&units=metric'" >> fetch_weather.py
           echo "r = requests.get(url)" >> fetch_weather.py
           echo "d = r.json()" >> fetch_weather.py
