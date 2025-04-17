@@ -2,8 +2,8 @@ name: Fetch Weather and Post to Tandem
 
 on:
   schedule:
-    - cron: '*/30 * * * *'  # Every 30 minutes UTC
-  workflow_dispatch:
+    - cron: '*/30 * * * *'  # Every 30 minutes
+  workflow_dispatch:        # Manual trigger (optional)
 
 jobs:
   update_and_post:
@@ -18,37 +18,37 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install requests
-        run: pip install requests
-
-      - name: Write fetch_weather.py
+      - name: Install dependencies
         run: |
-          cat <<EOF > fetch_weather.py
-import requests
-import json
+          python -m pip install --upgrade pip
+          pip install requests
 
-API_KEY = '0b4192116572f42a2606602c1a8d46c2'
-CITY = 'Delft'
-url = f'https://api.openweathermap.org/data/2.5/weather?q={CITY}&appid={API_KEY}&units=metric'
-r = requests.get(url)
-d = r.json()
+      - name: Write weather fetcher script
+        run: |
+          echo "import requests" > fetch_weather.py
+          echo "import json" >> fetch_weather.py
+          echo "" >> fetch_weather.py
+          echo "API_KEY = '0b4192116572f42a2606602c1a8d46c2'" >> fetch_weather.py
+          echo "CITY = 'Delft'" >> fetch_weather.py
+          echo "url = f'https://api.openweathermap.org/data/2.5/weather?q={CITY}&appid={API_KEY}&units=metric'" >> fetch_weather.py
+          echo "r = requests.get(url)" >> fetch_weather.py
+          echo "d = r.json()" >> fetch_weather.py
+          echo "" >> fetch_weather.py
+          echo "with open('stream.json', 'w') as f:" >> fetch_weather.py
+          echo "    json.dump({" >> fetch_weather.py
+          echo "        'temperature': d['main']['temp']," >> fetch_weather.py
+          echo "        'humidity': d['main']['humidity']" >> fetch_weather.py
+          echo "    }, f, indent=2)" >> fetch_weather.py
 
-with open('stream.json', 'w') as f:
-    json.dump({
-        'temperature': d['main']['temp'],
-        'humidity': d['main']['humidity']
-    }, f, indent=2)
-EOF
-
-      - name: Run fetch_weather.py
+      - name: Run the script
         run: python fetch_weather.py
 
-      - name: Commit updated stream.json
+      - name: Commit stream.json
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
           git add stream.json
-          git commit -m "Update stream.json with live weather data" || echo "No changes"
+          git commit -m "Update stream.json with new weather data" || echo "No changes to commit"
           git push
 
       - name: Send JSON Data to Tandem (Temperature)
